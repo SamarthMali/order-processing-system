@@ -1,0 +1,95 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(CUSTOMER)
+  orders    Order[]
+  auditLogs OrderAuditLog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([role])
+}
+
+model Product {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  stock       Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+
+  @@index([name])
+}
+
+model Order {
+  id         Int         @id @default(autoincrement())
+  status     OrderStatus @default(PENDING)
+  customerId Int
+  customer   User        @relation(fields: [customerId], references: [id])
+  items      OrderItem[]
+  auditLogs  OrderAuditLog[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  quantity  Int
+  price     Float
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderAuditLog {
+  id              Int      @id @default(autoincrement())
+  orderId         Int
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  action          String
+  oldStatus       String?
+  newStatus       String
+  performedById   Int?
+  performedBy     User?    @relation(fields: [performedById], references: [id])
+  performedByRole String?
+  note            String?
+  createdAt       DateTime @default(now())
+
+  @@index([orderId])
+  @@index([action])
+  @@index([createdAt])
+}
