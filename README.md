@@ -794,40 +794,6 @@ All responses use `{ status, message, data }`. This was implemented with a globa
 
 ---
 
-## Cursor AI Usage & Issues Encountered
-
-### What Cursor AI Was Used For
-
-1. **Project Scaffolding** — Generated the initial NestJS project structure with Prisma 7 integration, including the adapter configuration for SQLite.
-
-2. **Database Schema Design** — Designed the relational schema with proper foreign keys, indexes, enums, and the audit log model.
-
-3. **Feature Implementation** — Generated DTOs with validation decorators, services with business logic, controllers with Swagger decorators, and the guard/decorator system for RBAC.
-
-4. **Order State Machine** — Implemented the strict status transition logic with forward-only validation.
-
-5. **Global Response Formatting** — Created the interceptor and exception filter for uniform response envelopes.
-
-6. **Rate Limiting & Pagination** — Configured `@nestjs/throttler` globally with stricter auth route limits, and implemented offset-based pagination across all list endpoints.
-
-7. **Test Script Generation** — Generated comprehensive bash test scripts with colored output, structured sections, and assertion helpers.
-
-### Issues Found & How They Were Fixed
-
-1. **Prisma 7 Adapter Configuration** — Prisma 7 changed how database drivers work. The initial setup failed because the adapter configuration was incorrect. Fixed by using `@prisma/adapter-better-sqlite3` and passing it to the `PrismaClient` constructor via `super({ adapter })`.
-
-2. **`EADDRINUSE` Port Conflicts** — During development, hot-reload sometimes failed to release port 3000. Fixed by identifying and killing the orphaned process before restarting.
-
-3. **SQLite Database Locks** — After running `prisma db execute` to promote a test user to ADMIN, the database file was briefly locked, causing subsequent API requests to fail with `000` status. Fixed by adding a `sleep 2` delay after direct DB operations in the test script.
-
-4. **Prisma Client Type Generation** — After adding the `OrderAuditLog` model, TypeScript couldn't find `prisma.orderAuditLog`. Fixed by running `npx prisma generate` to regenerate the client types.
-
-5. **`forbidNonWhitelisted` + Pagination** — When adding `@Query() pagination: PaginationQueryDto` alongside other `@Query('status')` decorators, the global `ValidationPipe` with `forbidNonWhitelisted: true` rejected the extra query parameters. Fixed by creating combined DTOs (`OrderListQueryDto`, `AuditLogQueryDto`) that extend `PaginationQueryDto` with the filter fields.
-
-6. **Rate Limit Interference with Tests** — The initial auth route limit of 5 req/min was too strict for the test script, which makes 6+ registration requests sequentially. Fixed by adjusting to 10 req/min — still protective against brute force, but allows test execution.
-
-7. **Bash Script Compatibility** — The test script initially used `bash` via WSL, which wasn't available. Switched to Git Bash. The `json_field` helper function also needed adjustment for environments without `jq`.
-
 ### What Was Done Extra (Beyond Assignment)
 
 The assignment required only basic order CRUD. The following were implemented as additional features:
