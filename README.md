@@ -498,6 +498,5 @@ The assignment required only basic order CRUD. The following were implemented as
 - Standardized response envelope `{ status, message, data }`
 - Input validation with detailed error messages
 - Swagger/OpenAPI auto-generated documentation
-- Comprehensive test scripts (68+ automated tests)
 
 ---
